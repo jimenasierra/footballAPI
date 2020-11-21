@@ -10,11 +10,11 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @Slf4j
-public class footballAPIController {
+public class FootballAPIController {
 
     private final FootballAPIService footballAPIService;
 
-    public footballAPIController(FootballAPIService footballAPIService) {
+    public FootballAPIController(FootballAPIService footballAPIService) {
         this.footballAPIService = footballAPIService;
     }
 
