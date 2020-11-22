@@ -19,20 +19,24 @@ public class FootballAPIController {
     }
 
     @GetMapping("import-league")
-    public ResponseDto importLeague(String leagueCode) {return footballAPIService.loadCompetition(leagueCode);
+    public ResponseDto importLeague(String leagueCode) {
+        return footballAPIService.loadCompetition(leagueCode);
     }
 
     @GetMapping("import-league-teams")
-    public ResponseDto importLeagueTeams(String leagueCode) {return footballAPIService.loadCompetitionTeams(leagueCode, null);
+    public ResponseDto importLeagueTeams(String leagueCode) {
+        return footballAPIService.loadCompetitionTeams(leagueCode, null);
     }
 
     @GetMapping("import-league-players")
-    public ResponseDto importLeaguePlayers(String teamCode) {return footballAPIService.loadTeamPlayers(teamCode);
+    public ResponseDto importLeaguePlayers(String teamCode) {
+        return footballAPIService.loadTeamPlayers(teamCode);
     }
 
 
     @GetMapping("total-players")
-    public ResponseDto totalPlayers(String leagueCode) {return footballAPIService.totalPlayers(leagueCode);
+    public ResponseDto totalPlayers(String leagueCode) {
+        return footballAPIService.totalPlayers(leagueCode);
     }
 
 }

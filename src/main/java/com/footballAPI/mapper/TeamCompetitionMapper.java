@@ -7,11 +7,11 @@ import com.footballAPI.entity.TeamEntity;
 
 public class TeamCompetitionMapper {
 
-   public static TeamCompetitionEntity mapTeamCompetitionToEntity(TeamCompetitionDto dto){
-       TeamEntity teamEntity = TeamMapper.mapTeamToEntity(dto.getTeamDto());
-       CompetitionEntity competitionEntity = CompetitionMapper.mapCompetitionToEntity(dto.getCompetitionDto());
-       TeamCompetitionEntity entity = TeamCompetitionEntity.builder().competition(competitionEntity).team(teamEntity).build();
-       return entity;
-   }
+    public static TeamCompetitionEntity mapTeamCompetitionToEntity(TeamCompetitionDto dto) {
+        TeamEntity teamEntity = TeamMapper.mapTeamToEntity(dto.getTeamDto());
+        CompetitionEntity competitionEntity = CompetitionMapper.mapCompetitionToEntity(dto.getCompetitionDto());
+        TeamCompetitionEntity entity = TeamCompetitionEntity.builder().competition(competitionEntity).team(teamEntity).build();
+        return entity;
+    }
 
 }

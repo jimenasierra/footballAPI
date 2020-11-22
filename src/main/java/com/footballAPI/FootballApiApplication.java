@@ -18,8 +18,8 @@ public class FootballApiApplication {
 	@Bean("threadPoolTaskExecutor")
 	public TaskExecutor getAsyncExecutor(){
 		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-		executor.setCorePoolSize(100);
-		executor.setMaxPoolSize(1000);
+		executor.setCorePoolSize(1);
+		executor.setMaxPoolSize(1);
 		executor.setWaitForTasksToCompleteOnShutdown(true);
 		executor.setThreadNamePrefix("Async-");
 		return executor;

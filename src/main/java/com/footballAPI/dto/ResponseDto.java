@@ -2,6 +2,7 @@ package com.footballAPI.dto;
 
 import lombok.*;
 import org.springframework.http.HttpStatus;
+
 @Data
 @Getter
 @NoArgsConstructor

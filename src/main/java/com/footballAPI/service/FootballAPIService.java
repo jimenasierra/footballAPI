@@ -41,7 +41,7 @@ public class FootballAPIService {
         this.teamCompetitionRepository = teamCompetitionRepository;
     }
 
-    private HttpEntity<String> headers(){
+    private HttpEntity<String> headers() {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -51,7 +51,7 @@ public class FootballAPIService {
         return entity;
     }
 
-//    @Async("threadPoolTaskExecutor")
+    //    @Async("threadPoolTaskExecutor")
     public ResponseDto loadCompetition(String leagueCode) {
         final String uri = "http://api.football-data.org/v2/competitions/" + leagueCode;
         RestTemplate restTemplate = new RestTemplate();
@@ -64,11 +64,11 @@ public class FootballAPIService {
             CompetitionDto competitionDto = result.getBody();
 
             // League not null, means exists
-            if (competitionDto != null){
+            if (competitionDto != null) {
                 CompetitionEntity competitionEntity = CompetitionMapper.mapCompetitionToEntity(competitionDto);
 
                 // League already imported
-                if (competitionRepository.existsById(competitionEntity.getId())){
+                if (competitionRepository.existsById(competitionEntity.getId())) {
                     return new ResponseDto(HttpStatus.CONFLICT, HttpStatus.CONFLICT.value(), "League already imported", -1);
                 }
                 // League not imported
@@ -86,14 +86,14 @@ public class FootballAPIService {
             } else {
                 return new ResponseDto(HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.value(), "Not found", -1);
             }
-        } catch (HttpClientErrorException ex){
+        } catch (HttpClientErrorException ex) {
             return new ResponseDto(HttpStatus.GATEWAY_TIMEOUT, HttpStatus.GATEWAY_TIMEOUT.value(), "Server error", -1);
         }
 
 
     }
 
-//    @Async("threadPoolTaskExecutor")
+    //    @Async("threadPoolTaskExecutor")
     public ResponseDto loadCompetitionTeams(String leagueCode, CompetitionDto competitionDto) {
         final String uri = "http://api.football-data.org/v2/competitions/" + leagueCode + "/teams";
         RestTemplate restTemplate = new RestTemplate();
@@ -126,14 +126,14 @@ public class FootballAPIService {
             }
             teamCompetitionRepository.saveAll(teamCompetitionEntities);
             return new ResponseDto(HttpStatus.ACCEPTED, HttpStatus.ACCEPTED.value(), "Successfully imported", -1);
-        }else {
+        } else {
             return new ResponseDto(HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.value(), "Not found", -1);
         }
     }
 
-//    @Async("threadPoolTaskExecutor")
+    //    @Async("threadPoolTaskExecutor")
     public ResponseDto loadTeamPlayers(String teamCode) {
-        final String uri = "http://api.football-data.org/v2/teams/" + teamCode ;
+        final String uri = "http://api.football-data.org/v2/teams/" + teamCode;
         RestTemplate restTemplate = new RestTemplate();
 
         HttpEntity entity = headers();
@@ -142,7 +142,7 @@ public class FootballAPIService {
         if (result.getBody() != null) {
             List<PlayerDto> playerDtos = result.getBody().getSquad();
             List<PlayerEntity> playerEntities = new ArrayList<>();
-            for (PlayerDto playerDto  : playerDtos) {
+            for (PlayerDto playerDto : playerDtos) {
                 TeamDto teamDto = new TeamDto();
                 teamDto.setId(Long.parseLong(teamCode));
                 playerDto.setTeam(teamDto);
@@ -151,13 +151,13 @@ public class FootballAPIService {
             }
             playerRepository.saveAll(playerEntities);
             return new ResponseDto(HttpStatus.ACCEPTED, HttpStatus.ACCEPTED.value(), "Successfully imported", -1);
-        }else {
+        } else {
             return new ResponseDto(HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.value(), "Not found", -1);
         }
 
     }
 
-    public ResponseDto totalPlayers(String leagueCode){
+    public ResponseDto totalPlayers(String leagueCode) {
 
         try {
             CompetitionDto competitionDto = new CompetitionDto();
@@ -173,11 +173,11 @@ public class FootballAPIService {
             }
 
             if (count != 0) {
-                return new ResponseDto(HttpStatus.OK, HttpStatus.OK.value(), "",count);
+                return new ResponseDto(HttpStatus.OK, HttpStatus.OK.value(), "", count);
             } else {
-                return new ResponseDto(HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.value(), "",count);
+                return new ResponseDto(HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.value(), "", count);
             }
-        }catch (Exception ex){
+        } catch (Exception ex) {
             return new ResponseDto(HttpStatus.GATEWAY_TIMEOUT, HttpStatus.GATEWAY_TIMEOUT.value(), "Server error", -1);
         }
     }
