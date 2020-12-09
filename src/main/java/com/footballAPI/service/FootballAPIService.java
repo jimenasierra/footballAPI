@@ -1,5 +1,6 @@
 package com.footballAPI.service;
 
+import com.footballAPI.adapter.FootballDataAdapter;
 import com.footballAPI.dto.*;
 import com.footballAPI.entity.CompetitionEntity;
 import com.footballAPI.entity.PlayerEntity;
@@ -9,98 +10,73 @@ import com.footballAPI.mapper.CompetitionMapper;
 import com.footballAPI.mapper.PlayerMapper;
 import com.footballAPI.mapper.TeamCompetitionMapper;
 import com.footballAPI.mapper.TeamMapper;
+import com.footballAPI.property.FootballDataProperty;
 import com.footballAPI.repository.CompetitionRepository;
 import com.footballAPI.repository.PlayerRepository;
 import com.footballAPI.repository.TeamCompetitionRepository;
 import com.footballAPI.repository.TeamRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.*;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.HttpServerErrorException;
 
+import javax.swing.*;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
+@EnableConfigurationProperties(FootballDataProperty.class)
 public class FootballAPIService {
 
     private final CompetitionRepository competitionRepository;
     private final PlayerRepository playerRepository;
     private final TeamRepository teamRepository;
     private final TeamCompetitionRepository teamCompetitionRepository;
+    private final FootballDataAdapter footballDataAdapter;
 
-    public FootballAPIService(CompetitionRepository competitionRepository, PlayerRepository playerRepository, TeamRepository teamRepository, TeamCompetitionRepository teamCompetitionRepository) {
+
+    public FootballAPIService(CompetitionRepository competitionRepository, PlayerRepository playerRepository, TeamRepository teamRepository, TeamCompetitionRepository teamCompetitionRepository, FootballDataAdapter footballDataAdapter) {
         this.competitionRepository = competitionRepository;
         this.playerRepository = playerRepository;
         this.teamRepository = teamRepository;
         this.teamCompetitionRepository = teamCompetitionRepository;
+        this.footballDataAdapter = footballDataAdapter;
     }
 
-    private HttpEntity<String> headers() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("X-AUTH-TOKEN", "e34185592a4546899c8a7372c6a5ee42");
-
-        HttpEntity<String> entity = new HttpEntity<String>(headers);
-        return entity;
-    }
-
-    //    @Async("threadPoolTaskExecutor")
     public ResponseDto loadCompetition(String leagueCode) {
-        final String uri = "http://api.football-data.org/v2/competitions/" + leagueCode;
-        RestTemplate restTemplate = new RestTemplate();
-
-        HttpEntity entity = headers();
-
         try {
-            ResponseEntity<CompetitionDto> result = restTemplate.exchange(uri, HttpMethod.GET, entity, CompetitionDto.class);
-
-            CompetitionDto competitionDto = result.getBody();
-
-            // League not null, means exists
-            if (competitionDto != null) {
-                CompetitionEntity competitionEntity = CompetitionMapper.mapCompetitionToEntity(competitionDto);
-
-                // League already imported
-                if (competitionRepository.existsById(competitionEntity.getId())) {
-                    return new ResponseDto(HttpStatus.CONFLICT, HttpStatus.CONFLICT.value(), "League already imported", -1);
-                }
-                // League not imported
-                else {
+            // Not already imported
+            if (!competitionRepository.existsById(Long.parseLong(leagueCode))) {
+                ResponseEntity<CompetitionDto> result = footballDataAdapter.loadCompetition(leagueCode);
+                CompetitionDto competitionDto = result.getBody();
+                // Exist
+                if (competitionDto != null) {
+                    CompetitionEntity competitionEntity = CompetitionMapper.mapCompetitionToEntity(competitionDto);
                     competitionRepository.save(competitionEntity);
-                    loadCompetitionTeams(leagueCode, competitionDto);
-                    /*try {
-                        loadCompetitionTeams(leagueCode, competitionDto);
-                    } catch (Exception ex) {
-                        return new ResponseDto(HttpStatus.GATEWAY_TIMEOUT, HttpStatus.GATEWAY_TIMEOUT.value(), "Server error", -1);
-                    }*/
-
+                loadCompetitionTeams(leagueCode, competitionDto);
                     return new ResponseDto(HttpStatus.ACCEPTED, HttpStatus.ACCEPTED.value(), "Successfully imported", -1);
+                    // Not exist
+                } else {
+                    return new ResponseDto(HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.value(), "Not found", -1);
                 }
+                // Already imported
             } else {
-                return new ResponseDto(HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.value(), "Not found", -1);
+                return new ResponseDto(HttpStatus.CONFLICT, HttpStatus.CONFLICT.value(), "League already imported", -1);
             }
-        } catch (HttpClientErrorException ex) {
+        }catch (HttpServerErrorException ex) {
             return new ResponseDto(HttpStatus.GATEWAY_TIMEOUT, HttpStatus.GATEWAY_TIMEOUT.value(), "Server error", -1);
         }
-
-
     }
 
-    //    @Async("threadPoolTaskExecutor")
     public ResponseDto loadCompetitionTeams(String leagueCode, CompetitionDto competitionDto) {
-        final String uri = "http://api.football-data.org/v2/competitions/" + leagueCode + "/teams";
-        RestTemplate restTemplate = new RestTemplate();
 
-        HttpEntity entity = headers();
-
-        ResponseEntity<ParticipantTeamsDto> result = restTemplate.exchange(uri, HttpMethod.GET, entity, ParticipantTeamsDto.class);
+        ResponseEntity<ParticipantTeamsDto> result = footballDataAdapter.loadCompetitionTeams(leagueCode, competitionDto);
 
         if (result.getBody() != null) {
             List<TeamDto> teamDtos = result.getBody().getTeams();
@@ -118,7 +94,7 @@ public class FootballAPIService {
 
                 loadTeamPlayers(String.valueOf(teamDto.getId()));
                 try {
-                    TimeUnit.SECONDS.sleep(60);
+                    TimeUnit.SECONDS.sleep(10);
                 } catch (InterruptedException ie) {
                     Thread.currentThread().interrupt();
                     return new ResponseDto(HttpStatus.GATEWAY_TIMEOUT, HttpStatus.GATEWAY_TIMEOUT.value(), "Server error", -1);
@@ -133,11 +109,8 @@ public class FootballAPIService {
 
     //    @Async("threadPoolTaskExecutor")
     public ResponseDto loadTeamPlayers(String teamCode) {
-        final String uri = "http://api.football-data.org/v2/teams/" + teamCode;
-        RestTemplate restTemplate = new RestTemplate();
 
-        HttpEntity entity = headers();
-        ResponseEntity<TeamDto> result = restTemplate.exchange(uri, HttpMethod.GET, entity, TeamDto.class);
+        ResponseEntity<TeamDto> result = footballDataAdapter.loadTeamPlayers(teamCode);
 
         if (result.getBody() != null) {
             List<PlayerDto> playerDtos = result.getBody().getSquad();
@@ -154,7 +127,6 @@ public class FootballAPIService {
         } else {
             return new ResponseDto(HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.value(), "Not found", -1);
         }
-
     }
 
     public ResponseDto totalPlayers(String leagueCode) {
@@ -165,12 +137,13 @@ public class FootballAPIService {
             CompetitionEntity competitionEntity = CompetitionMapper.mapCompetitionToEntitySimple(competitionDto);
 
             List<TeamCompetitionEntity> teamCompetitionEntities = teamCompetitionRepository.findAllByCompetition(competitionEntity);
+            ArrayList<Long> teamsId = new ArrayList<>();
 
-            long count = 0L;
+            teamCompetitionEntities.forEach(teamCompetition -> teamsId.add(teamCompetition.getTeam().getId()));
 
-            for (TeamCompetitionEntity teamCompetitionEntity : teamCompetitionEntities) {
-                count = count + playerRepository.countByTeam(teamCompetitionEntity.getTeam());
-            }
+            List<PlayerEntity> playerEntities = playerRepository.findAllByTeam_IdIn(teamsId);
+
+            long count = playerEntities.size();
 
             if (count != 0) {
                 return new ResponseDto(HttpStatus.OK, HttpStatus.OK.value(), "", count);

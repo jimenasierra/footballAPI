@@ -9,4 +9,5 @@ public interface CompetitionRepository extends JpaRepository<CompetitionEntity, 
     List<CompetitionEntity> findAll();
 
     CompetitionEntity save(CompetitionEntity competitionEntity);
+
 }

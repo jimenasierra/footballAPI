@@ -1,11 +1,10 @@
 package com.footballAPI.controller;
 
-import com.fasterxml.jackson.databind.util.JSONPObject;
 import com.footballAPI.dto.ResponseDto;
-import com.footballAPI.dto.TotalDto;
 import com.footballAPI.service.FootballAPIService;
 import lombok.extern.slf4j.Slf4j;
-import org.json.JSONObject;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -18,8 +17,20 @@ public class FootballAPIController {
         this.footballAPIService = footballAPIService;
     }
 
+
+    /**/
+
+
     @GetMapping("import-league")
+    @ResponseStatus(HttpStatus.CREATED)
     public ResponseDto importLeague(String leagueCode) {
+        String message = "";
+        ResponseDto responseDto = footballAPIService.loadCompetition(leagueCode);
+//        String message = footballAPIService.loadCompetition(leagueCode);
+        if (message.equals("Successfully imported")) {
+            ResponseEntity.ok().body(responseDto);
+        }
+
         return footballAPIService.loadCompetition(leagueCode);
     }
 

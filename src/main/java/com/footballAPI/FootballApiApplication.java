@@ -11,18 +11,8 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 @EnableAsync
 public class FootballApiApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(FootballApiApplication.class, args);
-	}
-
-	@Bean("threadPoolTaskExecutor")
-	public TaskExecutor getAsyncExecutor(){
-		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-		executor.setCorePoolSize(1);
-		executor.setMaxPoolSize(1);
-		executor.setWaitForTasksToCompleteOnShutdown(true);
-		executor.setThreadNamePrefix("Async-");
-		return executor;
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(FootballApiApplication.class, args);
+    }
 
 }
