@@ -9,8 +9,6 @@ import org.springframework.http.HttpStatus;
 @AllArgsConstructor
 @Builder
 public class ResponseDto {
-    private HttpStatus httpStatus;
-    private int httpCode;
     private String message;
     private long total;
 

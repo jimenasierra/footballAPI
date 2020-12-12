@@ -14,7 +14,7 @@ public class AsyncConfig {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(1);
         executor.setMaxPoolSize(1);
-        executor.setQueueCapacity(1000);
+        executor.setQueueCapacity(500);
         executor.setThreadNamePrefix("FootballThread-");
         executor.initialize();
         return executor;

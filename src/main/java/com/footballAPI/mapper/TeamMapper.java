@@ -1,26 +1,20 @@
 package com.footballAPI.mapper;
 
-import com.footballAPI.dto.AreaDto;
 import com.footballAPI.dto.TeamDto;
 import com.footballAPI.entity.TeamEntity;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
-public class TeamMapper {
+import java.util.stream.Stream;
+import java.util.List;
 
+@Mapper
+public interface TeamMapper {
+    TeamDto mapTeamEntityToDto(TeamEntity teamEntity);
 
-    public static TeamEntity mapTeamToEntity(TeamDto dto) {
-        TeamEntity entity = TeamEntity.builder().id(dto.getId()).name(dto.getName()).tla(dto.getTla()).shortName(dto.getShortName()).areaName(dto.getArea().getName()).email(dto.getEmail()).build();
-        return entity;
-    }
+    @Mapping(target = "areaName", source = "area.name")
+    TeamEntity mapTeamDtoToEntity(TeamDto teamDto);
 
-    public static TeamEntity mapTeamToEntitySimple(TeamDto dto) {
-        TeamEntity entity = TeamEntity.builder().id(dto.getId()).build();
-        return entity;
-    }
+    List<TeamDto> teamsToTeamDtos(Stream<TeamEntity> teams);
 
-    public static TeamDto mapTeamToDto(TeamEntity entity) {
-        AreaDto areaDto = new AreaDto();
-        areaDto.setName(entity.getAreaName());
-        TeamDto dto = TeamDto.builder().id(entity.getId()).name(entity.getName()).tla(entity.getTla()).shortName(entity.getShortName()).area(areaDto).email(entity.getEmail()).build();
-        return dto;
-    }
 }
